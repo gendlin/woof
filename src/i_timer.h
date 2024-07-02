@@ -34,6 +34,8 @@ int I_GetTimeMS(void);
 
 double I_GetTimeUS(void);
 
+uint64_t I_GetTimeUSold(void);
+
 void I_SetTimeScale(int scale);
 
 void I_SetFastdemoTimer(boolean on);

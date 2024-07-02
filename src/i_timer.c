@@ -65,6 +65,18 @@ double I_GetTimeUS(void)
     return (int64_t)SDL_GetPerformanceCounter() * baseperiod_us;
 }
 
+uint64_t I_GetTimeUSold(void)
+{
+    uint64_t counter = SDL_GetPerformanceCounter();
+
+    if( basecounter == 0 )
+    {
+        basecounter = counter;
+    }
+
+    return ((counter - basecounter) * 1000000ull) / basefreq;
+}
+
 int time_scale = 100;
 
 static uint64_t GetPerfCounter_Scaled(void)
