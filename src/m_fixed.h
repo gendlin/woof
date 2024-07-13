@@ -27,7 +27,7 @@
 // VS 2019 and later provide a [64]/[32] intrinsic
 #if defined(_MSC_VER) && _MSC_VER >= 1920 && (defined(_M_X64) || defined(_M_IX86))
   #include <immintrin.h>
-  #define DIV64(a,b) (_div64((a),(b),NULL))
+  #define DIV64(a,b) (((a)>>FRACBITS)==INT_MIN && (b)==-1 ? 0 : _div64((a),(b),NULL))
 #else
   #define DIV64(a,b) ((fixed_t)((a)/(b)))
 #endif
