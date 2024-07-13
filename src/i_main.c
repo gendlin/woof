@@ -28,6 +28,8 @@
 #include "m_argv.h"
 #include "version.h"
 
+#include "m_fixed.h"
+
 //
 // D_DoomMain()
 // Not a globally visible function, just included for source reference,
@@ -42,6 +44,21 @@ __declspec(dllexport) void Woof_Exit(void)
     I_SafeExit(0);
 }
 #endif
+
+fixed_t rand_fixed()
+{
+    fixed_t a = rand();
+    a <<= 15;
+    a |= rand();
+    a <<= 2;
+    a |= rand() % 4;
+    return a;
+}
+
+inline boolean mismatch(fixed_t a, fixed_t b)
+{
+    return FixedDiv(a,b) != FixedDiv_old(a,b) || FixedDiv(b,a) != FixedDiv_old(b,a);
+}
 
 #if defined(WIN_LAUNCHER)
 __declspec(dllexport) int Woof_Main(int argc, char **argv)
@@ -67,7 +84,60 @@ int main(int argc, char **argv)
       exit(0);
    }
 
-   D_DoomMain();
+   if (mismatch(INT_MIN, INT_MIN) ||
+       mismatch(INT_MAX, INT_MAX) ||
+       mismatch(INT_MIN, INT_MAX) ||
+       mismatch(INT_MIN, -1) ||
+       mismatch(INT_MAX, -1))
+   {
+       printf("Extremal values test failed\n");
+       exit(1);
+   }
+
+   unsigned seed = 1337;
+   srand(seed);
+
+   printf("Testing FixedDiv with seed=%u\n", seed);
+
+   Uint64 start = SDL_GetPerformanceCounter();
+
+   fixed_t a_first, b_first;
+   for (unsigned i = 0; i < UINT_MAX; ++i)
+   {
+       fixed_t a = rand_fixed();
+       fixed_t b = rand_fixed();
+
+       if (i == 0)
+       {
+	   a_first = a;
+	   b_first = b;
+       }
+       else if (a == a_first && b == b_first)
+       {
+	   break;
+       }
+
+       fixed_t fd = FixedDiv(a,b);
+       fixed_t fd_old = FixedDiv_old(a,b);
+
+       if (fd != fd_old)
+       {
+	   printf("Mismatch at iteration %u: a = %d, b = %d\n", i, a, b);
+	   printf("FixedDiv result = %d\n", fd_old);
+	   printf("FixedDiv (div64) result = %d\n", fd);
+	   exit(1);
+       }
+
+       if (i && (i % (1024 * 1024 * 8) == 0))
+	   printf("Completed %u iterations\n", i);
+   }
+
+   Uint64 end = SDL_GetPerformanceCounter();
+   unsigned et = (end - start) / SDL_GetPerformanceFrequency();
+
+   printf("Testing completed after %u seconds\n", et);
+
+   //D_DoomMain();
 
    return 0;
 }

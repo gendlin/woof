@@ -68,6 +68,13 @@ inline static fixed_t FixedDiv(fixed_t a, fixed_t b)
     DIV64((int64_t) a << FRACBITS, b);
 }
 
+inline static fixed_t FixedDiv_old(fixed_t a, fixed_t b)
+{
+    // [FG] avoid 31-bit shift (from Chocolate Doom)
+    return (abs(a) >> 14) >= abs(b) ? ((a ^ b) < 0 ? INT_MIN : INT_MAX) :
+	(fixed_t)(((int64_t)a << FRACBITS) / b);
+}
+
 #endif
 
 //----------------------------------------------------------------------------
